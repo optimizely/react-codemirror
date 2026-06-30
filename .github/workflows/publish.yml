@@ -18,6 +18,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Don't persist the token in .git/config (artipacked). fetch-depth: 0
+          # already pulls all branches/tags, so no later authed git ops are needed.
+          persist-credentials: false
 
       - name: Validate tag format
         if: github.event_name != 'workflow_dispatch'
@@ -34,7 +37,8 @@ jobs:
       - name: Verify tag is on master
         if: github.event_name != 'workflow_dispatch'
         run: |
-          git fetch origin master --quiet
+          # origin/master is already present from the fetch-depth: 0 checkout;
+          # merge-base is a local op, so no authenticated re-fetch is required.
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/master; then
             echo "Error: Tag commit $GITHUB_SHA is not reachable from origin/master."
             echo "Only tags on the master branch can be published."
